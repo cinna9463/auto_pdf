@@ -630,7 +630,7 @@ async function generatePDF() {
   }
 
   for (let i=0;i<sourceImages.length;i++) {
-    const imageObj = sourceImages[i];
+    const page = sourceImages[i];
     if (!page || !page.canvas) continue;
     if (i > 0) pdf.addPage();
     const canvas = page.canvas;
