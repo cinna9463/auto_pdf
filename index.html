@@ -617,8 +617,8 @@ function deletePage(index) {
 
 /* ========= PDF generation ========= */
 async function generatePDF() {
-  const pdfDoc = await PDFLib.PDFDocument.create();
-
+  const { jsPDF } = window.jspdf;
+  const pdfDoc = jsPDF;
   // Use processed images if available, otherwise fallback to uploaded images
   const sourceImages = processedImages && processedImages.length > 0
     ? processedImages
