@@ -615,39 +615,70 @@ function deletePage(index) {
   }
 }
 
-/* ========= PDF generation ========= */
 async function generatePDF() {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-  // Use processed images if available, otherwise fallback to uploaded images
-  const sourceImages = processedPages && processedPages.length > 0
-    ? processedPages
-    : uploadedImages;
-
-  if (sourceImages.length === 0) {
-    alert('No images to export! Please upload some first.');
-    return;
+  // Decide which list to export from
+  let exportList = [];
+  if (processedPages && processedPages.length > 0) {
+    exportList = processedPages;
+  } else if (uploadedImages && uploadedImages.length > 0) {
+    exportList = uploadedImages.map(u => ({
+      canvas: null,
+      originalDataUrl: u.dataUrl,
+      rotation: 0
+    }));
+  } else {
+    return showStatus('No pages to export', 'error');
   }
 
-  for (let i=0;i<sourceImages.length;i++) {
-    const page = sourceImages[i];
-    if (!page || !page.canvas) continue;
+  showStatus('Generating PDF...', 'processing');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+
+  for (let i = 0; i < exportList.length; i++) {
+    const page = exportList[i];
+    if (!page) continue;
+
+    // Get data URL from canvas (if processed) or from uploaded image
+    let imgData;
+    if (page.canvas) {
+      imgData = page.canvas.toDataURL('image/jpeg', 0.9);
+    } else if (page.originalDataUrl) {
+      imgData = page.originalDataUrl;
+    } else {
+      continue;
+    }
+
     if (i > 0) pdf.addPage();
-    const canvas = page.canvas;
-    const img = canvas.toDataURL('image/jpeg', 0.9);
+
+    // Auto-scale to fit page
     const pdfW = pdf.internal.pageSize.getWidth();
     const pdfH = pdf.internal.pageSize.getHeight();
-    const imgRatio = canvas.height / canvas.width;
-    let imgW = pdfW - 20; let imgH = imgW * imgRatio;
-    if (imgH > pdfH - 20) { imgH = pdfH - 20; imgW = imgH / imgRatio; }
-    const x = (pdfW - imgW) / 2, y = (pdfH - imgH) / 2;
-    pdf.addImage(img, 'JPEG', x, y, imgW, imgH);
+
+    // Load image to get aspect ratio
+    const img = new Image();
+    await new Promise(res => {
+      img.onload = res;
+      img.src = imgData;
+    });
+
+    const imgRatio = img.height / img.width;
+    let imgW = pdfW - 20;
+    let imgH = imgW * imgRatio;
+    if (imgH > pdfH - 20) {
+      imgH = pdfH - 20;
+      imgW = imgH / imgRatio;
+    }
+    const x = (pdfW - imgW) / 2;
+    const y = (pdfH - imgH) / 2;
+
+    pdf.addImage(imgData, 'JPEG', x, y, imgW, imgH);
   }
 
   pdf.save('scanned-document.pdf');
   showStatus('PDF downloaded', 'success');
-  setTimeout(()=> showStatus('', null), 900);
+  setTimeout(() => showStatus('', null), 900);
 }
+
 
 
 /* ========= Clear ========= */
