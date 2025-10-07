@@ -629,28 +629,26 @@ async function generatePDF() {
     return;
   }
 
-  for (const imageObj of sourceImages) {
-    const imgBytes = await fetch(imageObj.url).then(res => res.arrayBuffer());
-    const img = await pdfDoc.embedJpg(imgBytes);
-    const page = pdfDoc.addPage([img.width, img.height]);
-    const rotation = imageObj.rotation || 0;
-    page.drawImage(img, {
-      x: 0,
-      y: 0,
-      width: img.width,
-      height: img.height,
-      rotate: PDFLib.degrees(rotation)
-    });
+  for (let i=0;i<sourceImages.length;i++) {
+    const imageObj = sourceImages[i];
+    if (!page || !page.canvas) continue;
+    if (i > 0) pdf.addPage();
+    const canvas = page.canvas;
+    const img = canvas.toDataURL('image/jpeg', 0.9);
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
+    const imgRatio = canvas.height / canvas.width;
+    let imgW = pdfW - 20; let imgH = imgW * imgRatio;
+    if (imgH > pdfH - 20) { imgH = pdfH - 20; imgW = imgH / imgRatio; }
+    const x = (pdfW - imgW) / 2, y = (pdfH - imgH) / 2;
+    pdf.addImage(img, 'JPEG', x, y, imgW, imgH);
+  }
   }
 
-  const pdfBytes = await pdfDoc.save();
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'output.pdf';
-  a.click();
-  URL.revokeObjectURL(url);
+  pdf.save('scanned-document.pdf');
+  showStatus('PDF downloaded', 'success');
+  setTimeout(()=> showStatus('', null), 900);
+
 }
 
 
