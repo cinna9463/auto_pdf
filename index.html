@@ -617,7 +617,7 @@ function deletePage(index) {
 
 /* ========= PDF generation ========= */
 function generatePDF() {
-  if (!processedPages || processedPages.length === 0) return showStatus('No pages to export', 'error');
+  //if (!processedPages || processedPages.length === 0) return showStatus('No pages to export', 'error');
   showStatus('Generating PDF...', 'processing');
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
@@ -634,7 +634,7 @@ function generatePDF() {
     if (imgH > pdfH - 20) { imgH = pdfH - 20; imgW = imgH / imgRatio; }
     const x = (pdfW - imgW) / 2, y = (pdfH - imgH) / 2;
     pdf.addImage(img, 'JPEG', x, y, imgW, imgH);
-  }
+  
   pdf.save('scanned-document.pdf');
   showStatus('PDF downloaded', 'success');
   setTimeout(()=> showStatus('', null), 900);
