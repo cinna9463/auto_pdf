@@ -618,7 +618,7 @@ function deletePage(index) {
 /* ========= PDF generation ========= */
 async function generatePDF() {
   const { jsPDF } = window.jspdf;
-  const pdfDoc = new jsPDF();
+  const pdf = new jsPDF();
   // Use processed images if available, otherwise fallback to uploaded images
   const sourceImages = processedImages && processedImages.length > 0
     ? processedImages
@@ -643,12 +643,10 @@ async function generatePDF() {
     const x = (pdfW - imgW) / 2, y = (pdfH - imgH) / 2;
     pdf.addImage(img, 'JPEG', x, y, imgW, imgH);
   }
-  }
 
   pdf.save('scanned-document.pdf');
   showStatus('PDF downloaded', 'success');
   setTimeout(()=> showStatus('', null), 900);
-
 }
 
 
