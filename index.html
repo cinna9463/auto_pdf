@@ -620,8 +620,8 @@ async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
   // Use processed images if available, otherwise fallback to uploaded images
-  const sourceImages = processedImages && processedImages.length > 0
-    ? processedImages
+  const sourceImages = processedPages && processedPages.length > 0
+    ? processedPages
     : uploadedImages;
 
   if (sourceImages.length === 0) {
