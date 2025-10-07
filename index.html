@@ -1,423 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Scanner — Learn on Export</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-/* UI styles (kept compact) */
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Segoe UI,Arial,Helvetica;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;color:#0f172a}
-.container{max-width:1200px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.08)}
-.header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:20px;text-align:center}
-.header h1{margin-bottom:6px;font-size:1.6rem}
-.upload-section{padding:18px;text-align:center}
-.upload-area{border:3px dashed #4f46e5;border-radius:12px;padding:34px;margin-bottom:16px;background:linear-gradient(135deg,#f8fafc,#e2e8f0);cursor:pointer}
-.upload-area.dragover{border-color:#7c3aed;background:linear-gradient(135deg,#ede9fe,#c4b5fd)}
-.upload-icon{font-size:42px;color:#4f46e5;margin-bottom:10px}
-.controls{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px}
-.btn{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:9px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.small-note{color:#64748b;font-size:.9rem}
-.pages-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:18px;padding:16px}
-.page-item{border:2px solid #e6eefb;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:8px}
-.page-preview{width:100%;max-width:180px;border-radius:6px;background:#fafafa}
-.page-info{font-weight:700;color:#475569}
-.rotation-info{color:#7c3aed;font-weight:700}
-.rotate-controls{display:flex;gap:8px;flex-wrap:wrap}
-.rotate-controls button{padding:8px 10px;border-radius:8px;border:1px solid #eef2ff;background:#fff;cursor:pointer;font-weight:700}
-.status{margin:12px auto;padding:12px;border-radius:10px;display:none;max-width:860px;text-align:center;font-weight:700}
-.status.processing{display:block;background:linear-gradient(135deg,#fffbeb,#fef3c7);color:#92400e;border:1px solid #f59e0b}
-.status.success{display:block;background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534;border:1px solid #22c55e}
-.status.error{display:block;background:linear-gradient(135deg,#fef2f2,#fecaca);color:#dc2626;border:1px solid #ef4444}
-.learned-badge{font-size:.72rem;color:#fff;background:#10b981;padding:3px 6px;border-radius:6px}
-@media (max-width:760px){.pages-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}}
-</style>
+  <meta charset="UTF-8" />
+  <title>Auto Orient PDF Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .page { display: inline-block; margin: 10px; vertical-align: top; }
+    .page img { max-width: 200px; display: block; margin-bottom: 5px; border: 1px solid #ccc; }
+    .controls button { margin-right: 5px; }
+  </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h1>📄 Document Scanner — Learn on Export</h1>
-    <p style="opacity:.9">Auto-detect orientation; fix mistakes and teach the model when you export.</p>
-  </div>
-
-  <div class="upload-section">
-    <div id="uploadArea" class="upload-area">
-      <div class="upload-icon">📷</div>
-      <div style="font-weight:700;font-size:1.05rem">Click to upload or drag & drop images</div>
-      <div class="small-note" style="margin-top:6px">Supports JPG/PNG. Use Auto-learn to teach only when exporting.</div>
-    </div>
-
-    <input id="imageInput" type="file" accept="image/*" multiple style="display:none"/>
-
-    <div class="controls">
-      <button id="processBtn" class="btn" disabled>🔄 Process Images</button>
-      <button id="downloadBtn" class="btn" disabled>📥 Download PDF (Save corrections)</button>
-      <button id="clearBtn" class="btn">🗑 Clear All</button>
-
-      <label style="display:inline-flex;align-items:center;gap:8px;margin-left:6px">
-        <input id="autoLearnToggle" type="checkbox" checked />
-        <span class="small-note">Auto-learn on export</span>
-      </label>
-
-      <div id="modelInfo" class="small-note" style="margin-left:10px"></div>
-
-      <button id="exportBtn" class="btn" title="Export model">⬆ Export</button>
-      <button id="importBtn" class="btn" title="Import model">⬇ Import</button>
-      <button id="resetModelBtn" class="btn" title="Reset model">♻ Reset</button>
-    </div>
-
-    <div id="progressContainer" class="progress-container" style="display:none;margin-top:12px">
-      <div style="background:#e6eefb;border-radius:8px;height:10px;overflow:hidden"><div id="progressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#4f46e5,#7c3aed);transition:width .2s"></div></div>
-      <div id="progressText" class="progress-text" style="margin-top:8px;color:#64748b">Processing images...</div>
-    </div>
-
-    <div id="status" class="status"></div>
-
-    <div id="pagesGrid" class="pages-grid"></div>
-  </div>
-</div>
+  <h2>Auto Orient PDF Builder</h2>
+  <input type="file" id="fileInput" multiple accept="image/*" />
+  <button onclick="downloadPDF()">Download PDF</button>
+  <button onclick="exportLRModel()">Export Model</button>
+  <input type="file" id="importModel" accept="application/json" onchange="handleImportModel(event)" />
+  <label><input type="checkbox" id="autoLearn" checked /> Auto-learn on Export</label>
+  <span id="modelStatus"></span>
+  <div id="pages"></div>
 
 <script>
-/* ===== state & refs ===== */
-let uploadedImages = []; // {file, dataUrl}
-let processedPages = []; // {canvas, rotation, initialRotation, features, originalDataUrl, saved}
-const STORAGE_KEY = 'orientation_training_v1';
+/* ================= Logistic Regression Model ================= */
 
-const imageInput = document.getElementById('imageInput');
-const uploadArea = document.getElementById('uploadArea');
-const pagesGrid = document.getElementById('pagesGrid');
-const processBtn = document.getElementById('processBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const clearBtn = document.getElementById('clearBtn');
-const progressContainer = document.getElementById('progressContainer');
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
-const statusEl = document.getElementById('status');
-const autoLearnToggle = document.getElementById('autoLearnToggle');
-const modelInfo = document.getElementById('modelInfo');
-const exportBtn = document.getElementById('exportBtn');
-const importBtn = document.getElementById('importBtn');
-const resetModelBtn = document.getElementById('resetModelBtn');
+const LR_KEY = 'orientation_lr_v1';
+const LR_CLASSES = [0,90,180,270];
+const LR_DIM = 6;
+let LR_LR = 0.25;
+const LR_REG = 1e-4;
+const LR_EPOCHS = 3;
 
-/* ===== drag & file input ===== */
-uploadArea.addEventListener('click', () => imageInput.click());
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
-imageInput.addEventListener('change', e => handleFiles(e.target.files));
-
-function handleFiles(files) {
-  const valid = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
-  if (!valid.length) { showStatus('Please select valid image files.', 'error'); return; }
-  const readers = valid.map(f => new Promise(res => {
-    const r = new FileReader();
-    r.onload = () => res({ file: f, dataUrl: r.result });
-    r.readAsDataURL(f);
-  }));
-  Promise.all(readers).then(results => {
-    uploadedImages = uploadedImages.concat(results);
-    processBtn.disabled = false;
-    showStatus(`${uploadedImages.length} images ready`, 'success');
-    renderPagesGrid();
-  });
-}
-
-/* ===== render previews ===== */
-function renderPagesGrid() {
-  pagesGrid.innerHTML = '';
-  for (let i=0;i<uploadedImages.length;i++) {
-    const entry = uploadedImages[i];
-    const div = document.createElement('div');
-    div.className = 'page-item';
-    div.dataset.index = i;
-    div.innerHTML = `
-      <img id="preview-${i}" src="${entry.dataUrl}" class="page-preview" alt="Page ${i+1}">
-      <div class="page-info">Page ${i+1} <span id="model-${i}" class="meta"></span></div>
-      <div id="rotation-${i}" class="rotation-info">Not processed</div>
-      <div class="rotate-controls">
-        <button data-action="ccw" data-index="${i}" disabled title="Rotate 90° CCW">⟲</button>
-        <button data-action="reset" data-index="${i}" disabled title="Reset">↺</button>
-        <button data-action="cw" data-index="${i}" disabled title="Rotate 90° CW">⟳</button>
-        <button data-action="del" data-index="${i}" title="Delete">🗑</button>
-      </div>
-    `;
-    pagesGrid.appendChild(div);
+function initLRModel() {
+  const raw = localStorage.getItem(LR_KEY);
+  if (raw) { try { const obj=JSON.parse(raw); if (obj && obj.W) return obj; } catch(e){} }
+  const W = [];
+  for (let c=0;c<LR_CLASSES.length;c++) {
+    const row = new Array(LR_DIM+1).fill(0);
+    for (let j=0;j<LR_DIM;j++) row[j]=(Math.random()-0.5)*0.02;
+    W.push(row);
   }
-  pagesGrid.querySelectorAll('button[data-action]').forEach(b => {
-    b.onclick = () => {
-      const action = b.getAttribute('data-action');
-      const idx = Number(b.getAttribute('data-index'));
-      if (action === 'ccw') manualRotate(idx, -90);
-      if (action === 'cw') manualRotate(idx, 90);
-      if (action === 'reset') resetPageRotation(idx);
-      if (action === 'del') deletePage(idx);
-    };
-  });
+  const model={W,learned:0,created:Date.now()};
+  localStorage.setItem(LR_KEY, JSON.stringify(model));
+  return model;
+}
+function loadLRModel(){ try{const raw=localStorage.getItem(LR_KEY); if(!raw)return initLRModel(); return JSON.parse(raw);}catch(e){return initLRModel();}}
+function saveLRModel(m){ localStorage.setItem(LR_KEY, JSON.stringify(m)); }
+
+function softmax(logits){const max=Math.max(...logits);const exps=logits.map(v=>Math.exp(v-max));const sum=exps.reduce((s,x)=>s+x,0);return exps.map(e=>e/sum);}
+
+function predictLR(features){
+  const model=loadLRModel(); const W=model.W;
+  const logits=W.map(row=>{let s=0;for(let j=0;j<LR_DIM;j++)s+=row[j]*(features[j]||0);s+=row[LR_DIM];return s;});
+  const probs=softmax(logits);
+  let best=0; for(let i=1;i<probs.length;i++)if(probs[i]>probs[best])best=i;
+  return {rotation:LR_CLASSES[best],probs,confidence:probs[best]};
 }
 
-/* ===== status helper ===== */
-function showStatus(msg, type) {
-  if (!type) { statusEl.style.display = 'none'; return; }
-  statusEl.style.display = 'block';
-  statusEl.textContent = msg;
-  statusEl.className = 'status ' + (type === 'processing' ? 'processing' : (type === 'success' ? 'success' : 'error'));
-}
-
-/* ===== feature extraction (same as before) ===== */
-function getGrayDataForCanvas(canvas) {
-  const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-  const image = ctx.getImageData(0,0,w,h).data;
-  const gray = new Uint8Array(w*h);
-  for (let i=0,j=0;i<image.length;i+=4,j++){
-    const g = Math.round(0.299*image[i]+0.587*image[i+1]+0.114*image[i+2]);
-    gray[j] = (g<128)?Math.max(0,g-30):Math.min(255,g+30);
-  }
-  return { gray, width: w, height: h };
-}
-function detectTextLinesFromGray(gray,w,h){let horizontal=0,vertical=0;for(let y=Math.floor(h*0.1);y<h*0.9;y+=3){let black=0,trans=0;let prev=gray[y*w+Math.floor(w*0.1)];for(let x=Math.floor(w*0.1);x<w*0.9;x++){const p=gray[y*w+x];if(p<128)black++;if(Math.abs(p-prev)>50)trans++;prev=p;}if(black>w*0.05&&black<w*0.5&&trans>3)horizontal++;}for(let x=Math.floor(w*0.1);x<w*0.9;x+=3){let black=0,trans=0;let prev=gray[Math.floor(h*0.1)*w+x];for(let y=Math.floor(h*0.1);y<h*0.9;y++){const p=gray[y*w+x];if(p<128)black++;if(Math.abs(p-prev)>50)trans++;prev=p;}if(black>h*0.05&&black<h*0.5&&trans>3)vertical++;}const ratio=horizontal/Math.max(vertical,1);return Math.min(ratio*100,300);}
-function calculateAspectScoreWH(w,h){const ar=h/w; if(ar>1.2) return 100; if(ar>0.8) return 50; return 10;}
-function calculateEdgeDirectionFromGray(gray,w,h){let horiz=0,vert=0;for(let y=1;y<h-1;y+=2){for(let x=1;x<w-1;x+=2){const topRow=gray[(y-1)*w+x-1]+2*gray[(y-1)*w+x]+gray[(y-1)*w+x+1];const bottomRow=gray[(y+1)*w+x-1]+2*gray[(y+1)*w+x]+gray[(y+1)*w+x+1];const horizontalEdge=Math.abs(topRow-bottomRow);const leftCol=gray[(y-1)*w+x-1]+2*gray[y*w+x-1]+gray[(y+1)*w+x-1];const rightCol=gray[(y-1)*w+x+1]+2*gray[y*w+x+1]+gray[(y+1)*w+x+1];const verticalEdge=Math.abs(leftCol-rightCol);horiz+=horizontalEdge;vert+=verticalEdge;}}const ratio=horiz/Math.max(vert,1);return Math.min(ratio*50,200);}
-function calculateWhiteSpaceFromGray(gray,w,h){let lines=0;for(let y=0;y<h;y+=5){let white=0;for(let x=Math.floor(w*0.1);x<w*0.9;x++){if(gray[y*w+x]>200)white++;}if(white>(w*0.8*0.7))lines++;}return Math.min(lines*2,100);}
-function computeFeaturesFromCanvas(canvas){const max=800; let small=canvas; if(Math.max(canvas.width,canvas.height)>max){small=document.createElement('canvas');const scale=max/Math.max(canvas.width,canvas.height);small.width=Math.round(canvas.width*scale);small.height=Math.round(canvas.height*scale);small.getContext('2d').drawImage(canvas,0,0,small.width,small.height);}const {gray,width,height}=getGrayDataForCanvas(small);const textLineScore=detectTextLinesFromGray(gray,width,height);const aspectScore=calculateAspectScoreWH(width,height);const edgeScore=calculateEdgeDirectionFromGray(gray,width,height);const whiteSpaceScore=calculateWhiteSpaceFromGray(gray,width,height);return [textLineScore/300, aspectScore/100, edgeScore/200, whiteSpaceScore/100, width/1000, height/1000];}
-
-/* ===== KNN & training (same improved logic) ===== */
-const BUCKET_PRECISION = 2, K = 7, KNN_CONF_THRESH = 0.7, MAX_EXAMPLES = 600, PRUNE_TO = 500;
-function featuresKey(features, precision = BUCKET_PRECISION){return features.map(f=>Number(f.toFixed(precision))).join(',');}
-function loadTrainingData(){try{const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return []; const parsed = JSON.parse(raw); return parsed.map(e=>{ if(e.count==null) e.count=1; if(e.ts==null) e.ts=Date.now(); return e; }); }catch(e){console.warn('load model err',e); return [];} }
-function saveTrainingData(arr){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); updateModelInfo(); }catch(e){console.warn('save model err', e);} }
-function updateModelInfo(){ const data = loadTrainingData(); const total = data.reduce((s,e)=>s+(e.count||1),0); const uniq = data.length; modelInfo.textContent = `Model: ${uniq} buckets (${total} examples)`; }
-updateModelInfo();
-
-function saveTrainingExample(features, rotation){
-  if (!autoLearnToggle.checked) return;
-  const key = featuresKey(features);
-  const data = loadTrainingData();
-  let foundIndex = -1;
-  for (let i=0;i<data.length;i++){
-    if (featuresKey(data[i].features) === key && data[i].rotation === rotation){ foundIndex = i; break; }
-  }
-  if (foundIndex >= 0){ data[foundIndex].count = (data[foundIndex].count||1) + 1; data[foundIndex].ts = Date.now(); }
-  else data.push({ features: features.slice(), rotation, count: 1, ts: Date.now() });
-
-  // prune counts if needed
-  let totalCount = data.reduce((s,e)=> s + (e.count||1), 0);
-  if (totalCount > MAX_EXAMPLES) {
-    data.sort((a,b)=> (b.count||1) - (a.count||1) || b.ts - a.ts);
-    const kept=[]; let acc=0;
-    for (const e of data){ if (acc >= PRUNE_TO) break; kept.push(e); acc += (e.count||1); }
-    saveTrainingData(kept);
-  } else saveTrainingData(data);
-}
-
-function predictWeightedKNN(features, k = K) {
-  const data = loadTrainingData(); if (!data.length) return null;
-  const eps = 1e-6;
-  const dists = data.map(d => { let s=0; for (let i=0;i<features.length;i++){ const diff = features[i] - (d.features[i]||0); s += diff*diff; } return { rotation: d.rotation, d: Math.sqrt(s), count: d.count||1, ts: d.ts||0 }; });
-  dists.sort((a,b)=>a.d-b.d);
-  const chosen = dists.slice(0, Math.min(k, dists.length));
-  const votes = {}; let totalWeight = 0;
-  for (const n of chosen) { const w = (n.count||1) / (n.d + eps); votes[n.rotation] = (votes[n.rotation]||0) + w; totalWeight += w; }
-  const entries = Object.entries(votes).sort((a,b)=>b[1]-a[1]); if (!entries.length) return null;
-  const best = entries[0]; return { rotation: Number(best[0]), confidence: best[1] / totalWeight };
-}
-
-function importModelFromArray(arr){
-  const map = {};
-  for (const ex of arr){ if (!ex.features || ex.rotation == null) continue; const key = featuresKey(ex.features); const mapKey = key + '|' + ex.rotation; if (!map[mapKey]) map[mapKey] = { features: ex.features.slice(), rotation: ex.rotation, count: 0, ts: Date.now() }; map[mapKey].count += ex.count || 1; }
-  const out = Object.values(map); out.sort((a,b)=> (b.count||1) - (a.count||1)); if (out.length > MAX_EXAMPLES) out.splice(PRUNE_TO); saveTrainingData(out); updateModelInfo();
-  showStatus('Model imported and deduped', 'success'); setTimeout(()=>showStatus('', null), 900);
-}
-function exportModelToFile(){ const data = loadTrainingData(); const blob = new Blob([JSON.stringify(data)], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'orientation_model.json'; a.click(); URL.revokeObjectURL(a.href); }
-
-/* hook import/export/reset */
-exportBtn.addEventListener('click', exportModelToFile);
-importBtn.addEventListener('click', ()=>{ const input = document.createElement('input'); input.type='file'; input.accept='application/json'; input.onchange = async (e)=>{ const f = e.target.files[0]; if(!f) return; try{ const txt = await f.text(); const parsed = JSON.parse(txt); importModelFromArray(parsed); }catch(err){ alert('Invalid model file'); } }; input.click();});
-resetModelBtn.addEventListener('click', ()=>{ if(!confirm('Reset model?')) return; localStorage.removeItem(STORAGE_KEY); updateModelInfo(); showStatus('Model reset', 'success'); setTimeout(()=>showStatus('', null),900); });
-
-/* ===== rotation helpers & combined heuristics ===== */
-function drawRotatedCanvasFromImage(img, degrees){ const deg = ((degrees%360)+360)%360; const c=document.createElement('canvas'); const ctx=c.getContext('2d'); if(deg===0){c.width=img.naturalWidth;c.height=img.naturalHeight;ctx.drawImage(img,0,0);return c;} if(deg===180){c.width=img.naturalWidth;c.height=img.naturalHeight;ctx.translate(c.width/2,c.height/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);return c;} c.width=img.naturalHeight;c.height=img.naturalWidth;ctx.translate(c.width/2,c.height/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);return c;}
-function rotateCanvas(srcCanvas, degrees){ const deg=((degrees%360)+360)%360; if(deg===0) return srcCanvas; const dst=document.createElement('canvas'); const ctx=dst.getContext('2d'); if(deg===180){dst.width=srcCanvas.width;dst.height=srcCanvas.height;ctx.translate(dst.width/2,dst.height/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(srcCanvas,-srcCanvas.width/2,-srcCanvas.height/2);return dst;} dst.width=srcCanvas.height;dst.height=srcCanvas.width;ctx.translate(dst.width/2,dst.height/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(srcCanvas,-srcCanvas.width/2,-srcCanvas.height/2);return dst;}
-function analyzeCombinedScore(canvas){ const features = computeFeaturesFromCanvas(canvas); return (features[0]*0.4)+(features[1]*0.2)+(features[2]*0.3)+(features[3]*0.1); }
-
-/* ===== core detection: try KNN first, fallback heuristics ===== */
-async function detectAndCorrectOrientation(dataUrl){
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const orig = document.createElement('canvas');
-      orig.width = img.naturalWidth; orig.height = img.naturalHeight;
-      orig.getContext('2d').drawImage(img,0,0);
-      const originalFeatures = computeFeaturesFromCanvas(orig);
-      const knn = predictWeightedKNN(originalFeatures, K);
-      if (knn && knn.confidence >= KNN_CONF_THRESH){
-        const finalCanvas = drawRotatedCanvasFromImage(img, knn.rotation);
-        resolve({ canvas: finalCanvas, rotation: knn.rotation, initialRotation: knn.rotation, features: originalFeatures, choseBy:'knn', originalDataUrl: dataUrl, saved:false });
-        return;
-      }
-      const rotations = [0,90,180,270];
-      let best={rot:0,score:-Infinity};
-      for (const r of rotations){
-        const testCanvas = drawRotatedCanvasFromImage(img, r);
-        const s = analyzeCombinedScore(testCanvas);
-        if (s>best.score) best={rot:r,score:s};
-      }
-      const finalCanvas = drawRotatedCanvasFromImage(img, best.rot);
-      resolve({ canvas: finalCanvas, rotation: best.rot, initialRotation: best.rot, features: originalFeatures, choseBy:'heuristic', originalDataUrl: dataUrl, saved:false });
-    };
-    img.src = dataUrl;
-  });
-}
-
-/* ===== processing flow ===== */
-processBtn.addEventListener('click', processImages);
-downloadBtn.addEventListener('click', onDownloadAndMaybeLearn);
-clearBtn.addEventListener('click', clearAll);
-
-async function processImages(){
-  if(!uploadedImages.length) return;
-  processBtn.disabled = true; downloadBtn.disabled = true;
-  progressContainer.style.display = 'block';
-  showStatus('Processing images...', 'processing');
-  processedPages = [];
-  for (let i=0;i<uploadedImages.length;i++){
-    progressFill.style.width = `${Math.round((i / uploadedImages.length) * 100)}%`;
-    progressText.textContent = `Processing image ${i+1} of ${uploadedImages.length}...`;
-    try {
-      const res = await detectAndCorrectOrientation(uploadedImages[i].dataUrl);
-      res.originalDataUrl = uploadedImages[i].dataUrl;
-      processedPages[i] = res;
-      renderProcessedPreview(i);
-    } catch (err) {
-      console.error('process error', err);
-      showStatus('Error processing image '+(i+1), 'error');
+function trainLR(features,rotationLabel){
+  const model=loadLRModel(); const W=model.W; const classIdx=LR_CLASSES.indexOf(rotationLabel); if(classIdx<0)return;
+  for(let e=0;e<LR_EPOCHS;e++){
+    const logits=W.map(row=>{let s=0;for(let j=0;j<LR_DIM;j++)s+=row[j]*(features[j]||0);s+=row[LR_DIM];return s;});
+    const probs=softmax(logits);
+    for(let c=0;c<W.length;c++){const yc=(c===classIdx)?1:0;const err=probs[c]-yc;
+      for(let j=0;j<LR_DIM;j++){W[c][j]-=LR_LR*(err*(features[j]||0)+LR_REG*W[c][j]);}
+      W[c][LR_DIM]-=LR_LR*(err+LR_REG*W[c][LR_DIM]);
     }
   }
-  progressFill.style.width = '100%';
-  progressText.textContent = 'Processing complete!';
-  setTimeout(()=>{ progressContainer.style.display='none'; showStatus(`${processedPages.length} pages processed`, 'success'); enableAllRotateButtons(true); downloadBtn.disabled = false; setTimeout(()=>showStatus('', null), 900); },400);
+  model.learned=(model.learned||0)+1; model.updated=Date.now(); saveLRModel(model); updateModelStatus();
 }
 
-/* update UI for processed page */
-function renderProcessedPreview(index){
-  const p = processedPages[index];
-  const preview = document.getElementById(`preview-${index}`);
-  const rotEl = document.getElementById(`rotation-${index}`);
-  const modelEl = document.getElementById(`model-${index}`);
-  if (!preview || !rotEl) return;
-  if (p && p.canvas) preview.src = p.canvas.toDataURL('image/jpeg',0.88);
-  rotEl.textContent = (p.rotation===0)?'No rotation':(p.rotation+'°');
-  modelEl.innerHTML = p.choseBy === 'knn' ? '<span class="learned-badge">Model</span>' : '<span class="small-note">heuristic</span>';
+function exportLRModel(){
+  const m=loadLRModel(); const blob=new Blob([JSON.stringify(m)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='orientation_lr_model.json';a.click();URL.revokeObjectURL(a.href);
 }
+function handleImportModel(ev){const f=ev.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{const p=JSON.parse(fr.result);if(p&&p.W)saveLRModel(p);updateModelStatus();}catch(e){alert('Import failed')}};fr.readAsText(f);}
+function updateModelStatus(){const m=loadLRModel();let examples=m.learned||0;document.getElementById('modelStatus').textContent=` Model: weights=${m.W.length}, examples=${examples}`;}
+initLRModel(); updateModelStatus();
 
-/* rotation controls - do not save on rotate now */
-function enableAllRotateButtons(enable){
-  pagesGrid.querySelectorAll('button[data-action]').forEach(b => {
-    const action = b.getAttribute('data-action'); if (action==='del'){ b.disabled = false; return; }
-    b.disabled = !enable;
-  });
-}
+/* ================= Page Handling ================= */
 
-function manualRotate(index, delta){
-  const page = processedPages[index];
-  if(!page) return;
-  const newRot = (((page.rotation || 0) + delta) % 360 + 360) % 360;
-  const newCanvas = rotateCanvas(page.canvas, delta);
-  processedPages[index].canvas = newCanvas;
-  processedPages[index].rotation = newRot;
-  // mark unsaved (user changed)
-  processedPages[index].saved = false;
-  renderProcessedPreview(index);
-}
+let pages=[];
 
-/* reset to automatic detection (re-runs detection which will consult KNN/heuristic) */
-function resetPageRotation(index){
-  const p = processedPages[index];
-  if(!p) return;
-  detectAndCorrectOrientation(p.originalDataUrl).then(result => {
-    result.originalDataUrl = p.originalDataUrl;
-    processedPages[index] = result;
-    renderProcessedPreview(index);
-  }).catch(err => { console.error(err); showStatus('Reset failed', 'error'); setTimeout(()=>showStatus('', null),900); });
-}
-
-/* delete */
-function deletePage(index){
-  uploadedImages.splice(index,1);
-  processedPages.splice(index,1);
-  renderPagesGrid();
-  for (let i=0;i<processedPages.length;i++){
-    const pr = document.getElementById(`preview-${i}`);
-    if(pr && processedPages[i] && processedPages[i].canvas) pr.src = processedPages[i].canvas.toDataURL('image/jpeg',0.88);
-    const rot = document.getElementById(`rotation-${i}`);
-    if(rot && processedPages[i]) rot.textContent = processedPages[i].rotation + '°';
-  }
-}
-
-/* ======= NEW: on download, save final corrections (if any) THEN generate PDF ======= */
-async function onDownloadAndMaybeLearn(){
-  if (!processedPages.length) return showStatus('No pages to export', 'error');
-
-  // 1) If Auto-learn ON, save corrections for pages where rotation != initialRotation and not yet saved
-  let savedCount = 0;
-  if (autoLearnToggle.checked) {
-    for (let i=0;i<processedPages.length;i++){
-      const p = processedPages[i];
-      if (!p) continue;
-      // only save when features exist and final rotation differs from initial auto suggestion
-      if (p.features && p.initialRotation != null && p.rotation !== p.initialRotation && !p.saved) {
-        saveTrainingExample(p.features, p.rotation);
-        p.saved = true;
-        savedCount++;
+document.getElementById('fileInput').addEventListener('change',e=>{
+  for(const file of e.target.files){
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      // try to predict but fallback to 0° if something fails
+      let rotation = 0;
+      let features = [];
+      try {
+        features = extractFeatures(img);
+        const pred = predictLR(features);
+        rotation = pred.rotation || 0;
+      } catch (err) {
+        console.warn("Prediction skipped:", err);
       }
+      addPage(url, rotation, features);
+    };
+    img.src=url;
+  }
+});
+
+function addPage(url,rotation,features){
+  const div=document.createElement('div');div.className='page';
+  const img=document.createElement('img');img.src=url;img.style.transform=`rotate(${rotation}deg)`;
+  const controls=document.createElement('div');controls.className='controls';
+  const btnL=document.createElement('button');btnL.textContent='⟲';btnL.onclick=()=>rotatePage(div,-90);
+  const btnR=document.createElement('button');btnR.textContent='⟳';btnR.onclick=()=>rotatePage(div,90);
+  controls.appendChild(btnL);controls.appendChild(btnR);
+  div.appendChild(img);div.appendChild(controls);
+  document.getElementById('pages').appendChild(div);
+  pages.push({div,img,rotation,features});
+}
+function rotatePage(div,delta){const p=pages.find(x=>x.div===div);p.rotation=(p.rotation+delta+360)%360;p.img.style.transform=`rotate(${p.rotation}deg)`;}
+
+/* very simple "features" just for demo — real one can be better */
+function extractFeatures(img){
+  const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+  const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);
+  const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  let sumX=0,sumY=0,sum=0;
+  for(let i=0;i<data.length;i+=4){const v=(data[i]+data[i+1]+data[i+2])/3;const idx=i/4;const x=idx%canvas.width;const y=Math.floor(idx/canvas.width);sumX+=x*v;sumY+=y*v;sum+=v;}
+  const cx=sumX/sum/canvas.width, cy=sumY/sum/canvas.height;
+  return [cx,cy,sum/(canvas.width*canvas.height*255), img.naturalWidth/img.naturalHeight, Math.random(), Math.random()];
+}
+
+/* ================= PDF Export ================= */
+
+async function downloadPDF(){
+  if (pages.length === 0) {
+    alert("No pages uploaded!");
+    return;
+  }
+  const pdf=await PDFLib.PDFDocument.create();
+  for(const p of pages){
+    const jpg=await fetch(p.img.src).then(r=>r.arrayBuffer());
+    const img=await pdf.embedJpg(jpg);
+    const page=pdf.addPage([img.width,img.height]);
+    // even if rotation undefined, fallback to 0
+    const rot = p.rotation || 0;
+    page.drawImage(img,{x:0,y:0,width:img.width,height:img.height,rotate:PDFLib.degrees(rot)});
+    if(document.getElementById('autoLearn').checked){
+      try { trainLR(p.features, rot); } catch {}
     }
   }
-
-  if (savedCount > 0) showStatus(`Saved ${savedCount} correction(s) to model`, 'success');
-  else showStatus(autoLearnToggle.checked ? 'No new corrections to save' : 'Auto-learn is off, no training saved', 'success');
-
-  // small delay to let user see message, then generate PDF
-  setTimeout(() => {
-    showStatus('Generating PDF...', 'processing');
-    generatePDF();
-  }, 700);
+  const blob=await pdf.save();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([blob]));a.download='output.pdf';a.click();URL.revokeObjectURL(a.href);
 }
-
-/* ===== generate PDF using processedPages canvases ===== */
-function generatePDF(){
-  if(!processedPages.length) return showStatus('No pages to export', 'error');
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-  for (let i=0;i<processedPages.length;i++){
-    const page = processedPages[i];
-    if(!page || !page.canvas) continue;
-    if (i > 0) pdf.addPage();
-    const canvas = page.canvas;
-    const img = canvas.toDataURL('image/jpeg', 0.9);
-    const pdfW = pdf.internal.pageSize.getWidth();
-    const pdfH = pdf.internal.pageSize.getHeight();
-    const imgRatio = canvas.height / canvas.width;
-    let imgW = pdfW - 20, imgH = imgW * imgRatio;
-    if (imgH > pdfH - 20) { imgH = pdfH - 20; imgW = imgH / imgRatio; }
-    const x = (pdfW - imgW) / 2, y = (pdfH - imgH) / 2;
-    pdf.addImage(img, 'JPEG', x, y, imgW, imgH);
-  }
-  pdf.save('scanned-document.pdf');
-  showStatus('PDF downloaded', 'success');
-  setTimeout(()=> showStatus('', null), 900);
-}
-
-/* ===== clear ===== */
-function clearAll(){
-  if (!confirm('Clear all images and processed pages?')) return;
-  uploadedImages=[]; processedPages=[]; pagesGrid.innerHTML=''; imageInput.value=''; processBtn.disabled=true; downloadBtn.disabled=true;
-  showStatus('Cleared', 'success'); setTimeout(()=>showStatus('', null),900);
-}
-
-/* initial render & model info */
-renderPagesGrid();
-updateModelInfo();
 </script>
 </body>
 </html>
